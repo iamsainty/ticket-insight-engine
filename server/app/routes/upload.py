@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import os
 from app.utils.file_utils import validate_file_extension, generate_unique_filename
+from app.services.excel_parser import parse_excel_file
 
 router = APIRouter()
 
@@ -22,8 +23,14 @@ async def upload_file(file: UploadFile = File(...)):
         file_content = await file.read()
         fileBuffer.write(file_content)
 
+    parsed_data = parse_excel_file(file_path)
+
+    if not parsed_data["success"]:
+        raise HTTPException(status_code=400, detail=parsed_data["message"])
+
     return {
         "success": True,
-        "message": "File uploaded successfully",
-        "file_path": file_path
+        "message": "File parsed successfully",
+        "file_path": file_path,
+        "data": parsed_data.get("data", [])
     }
