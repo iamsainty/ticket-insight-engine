@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import os
-import uuid
+from app.utils.file_utils import validate_file_extension, generate_unique_filename
 
 router = APIRouter()
 
@@ -8,16 +8,13 @@ UPLOAD_DIR = "uploads"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-ALLOWED_EXT = [".csv", ".xls", ".xlsx"]
-
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    file_ext = os.path.splitext(file.filename)[1]
 
-    if file_ext.lower() not in ALLOWED_EXT:
+    if not validate_file_extension(file.filename):
         raise HTTPException(status_code=400, detail="Invalid file extension")
 
-    unique_filename = f"{uuid.uuid4()}_{file.filename}"
+    unique_filename = generate_unique_filename(file.filename)
 
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
