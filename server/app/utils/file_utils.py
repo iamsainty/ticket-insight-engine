@@ -6,12 +6,12 @@ ALLOWED_EXTENSIONS = [".xls", ".xlsx"]
 
 def validate_file_extension(filename):
 
-    file_extension = os.path.splitext(filename)[1].lower()
-
-    if file_extension not in ALLOWED_EXTENSIONS:
+    if not filename:
         return False
 
-    return True
+    file_extension = os.path.splitext(filename)[1].lower()
+
+    return file_extension in ALLOWED_EXTENSIONS
 
 
 def generate_unique_filename(filename):

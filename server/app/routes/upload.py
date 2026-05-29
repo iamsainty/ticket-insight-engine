@@ -1,6 +1,10 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File
+from fastapi.responses import JSONResponse
 import os
-from app.utils.file_utils import validate_file_extension, generate_unique_filename
+from app.utils.file_utils import (
+    validate_file_extension,
+    generate_unique_filename
+)
 from app.services.excel_parser import parse_excel_file
 
 router = APIRouter()
@@ -12,25 +16,56 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
 
-    if not validate_file_extension(file.filename):
-        raise HTTPException(status_code=400, detail="Invalid file extension")
+    try:
 
-    unique_filename = generate_unique_filename(file.filename)
+        if not validate_file_extension(file.filename):
 
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "message": "Invalid file extension",
+                    "data": None
+                }
+            )
 
-    with open(file_path, "wb") as fileBuffer:
-        file_content = await file.read()
-        fileBuffer.write(file_content)
+        unique_filename = generate_unique_filename(file.filename)
 
-    parsed_data = parse_excel_file(file_path)
+        file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
-    if not parsed_data["success"]:
-        raise HTTPException(status_code=400, detail=parsed_data["message"])
+        with open(file_path, "wb") as fileBuffer:
 
-    return {
-        "success": True,
-        "message": "File parsed successfully",
-        "file_path": file_path,
-        "data": parsed_data.get("data", [])
-    }
+            file_content = await file.read()
+            fileBuffer.write(file_content)
+
+        parsed_data = parse_excel_file(file_path)
+
+        if not parsed_data["success"]:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "message": parsed_data["message"],
+                    "data": None
+                }
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "File parsed successfully",
+                "data": parsed_data.get("data", [])
+            }
+        )
+
+    except Exception as e:
+
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "message": f"Internal server error: {str(e)}",
+                "data": None
+            }
+        )
