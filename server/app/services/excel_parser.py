@@ -1,8 +1,7 @@
 import pandas as pd
 
 from app.services.validate_file import validate_file
-from app.services.pii_masker import sanitize_rows
-
+from app.services.preprocessing import preprocess_data
 
 def parse_excel_file(file_path):
 
@@ -32,22 +31,22 @@ def parse_excel_file(file_path):
                 "data": validated_file.get("missing_columns", [])
             }
 
-        rows = df.to_dict(orient="records")
+        rows = df.fillna("").to_dict(orient="records")
 
-        sanitized_result = sanitize_rows(rows)
+        processed_result = preprocess_data(rows)
 
-        if not sanitized_result["success"]:
+        if not processed_result["success"]:
 
             return {
                 "success": False,
-                "message": sanitized_result["message"],
+                "message": processed_result["message"],
                 "data": None
             }
 
         return {
             "success": True,
             "message": "File parsed successfully",
-            "data": sanitized_result["sanitized_rows"]
+            "data": processed_result["processed_rows"]
         }
 
     except Exception as e:
