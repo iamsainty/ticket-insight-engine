@@ -68,12 +68,17 @@ async def upload_file(file: UploadFile = File(...)):
         if not embedding_result["success"]:
             return JSONResponse(status_code=400, content=embedding_result)
 
+        clusters = create_ticket_clusters(embedding_result["data"])
+
+        if not clusters["success"]:
+            return JSONResponse(status_code=400, content=clusters)
+
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
                 "message": "File uploaded and processed successfully",
-                "data": embedding_result["data"],
+                "data": clusters["data"],
             },
         )
 
