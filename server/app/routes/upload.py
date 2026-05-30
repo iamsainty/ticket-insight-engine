@@ -9,6 +9,9 @@ from app.utils.file_utils import (
     validate_file_extension,
 )
 from app.services.ai.analyzer import analyze_tickets
+from app.services.embeddings.embedding_service import (
+    generate_ticket_embeddings
+)
 
 router = APIRouter()
 
@@ -60,12 +63,17 @@ async def upload_file(file: UploadFile = File(...)):
         if not gpt_result["success"]:
             return JSONResponse(status_code=400, content=gpt_result)
 
+        embedding_result = generate_ticket_embeddings(gpt_result["data"])
+
+        if not embedding_result["success"]:
+            return JSONResponse(status_code=400, content=embedding_result)
+
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
                 "message": "File uploaded and processed successfully",
-                "data": gpt_result["data"],
+                "data": embedding_result["data"],
             },
         )
 

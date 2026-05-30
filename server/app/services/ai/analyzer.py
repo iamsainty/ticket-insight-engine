@@ -46,6 +46,7 @@ def analyze_ticket(ticket):
             "success": True,
             "message": "Ticket analyzed successfully",
             "data": {
+                "number": ticket.get("Number", ""),
                 "issue": parsed_response.get("issue", ""),
                 "root_cause": parsed_response.get("root_cause", ""),
                 "resolution": parsed_response.get("resolution", "")
