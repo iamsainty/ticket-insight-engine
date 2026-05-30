@@ -8,12 +8,10 @@ def create_semantic_text(gpt_result):
 
         issue = gpt_result.get("issue", "")
         root_cause = gpt_result.get("root_cause", "")
-        resolution = gpt_result.get("resolution", "")
 
         semantic_text = f"""
         Issue: {issue}
         Root Cause: {root_cause}
-        Resolution: {resolution}
         """
 
         return {
