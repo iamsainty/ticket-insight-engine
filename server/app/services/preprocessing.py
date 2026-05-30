@@ -68,6 +68,28 @@ def preprocess_row(text):
             text
         )
 
+        # Replace date and timestamp
+        text = re.sub(
+            r'\b\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}:\d{2}\b',
+            '[DATE]',
+            text
+        )
+
+        # Replace additional comment marker
+        text = re.sub(
+            r'\(Additional comments \(User View\)\)',
+            '[COMMENT]',
+            text,
+            flags=re.IGNORECASE
+        )
+
+        # Replace IP addresses
+        text = re.sub(
+            r'\b(?:\d{1,3}\.){3}\d{1,3}\b',
+            '[IP_ADDRESS]',
+            text
+        )
+
         text = text.strip()
 
         return text
