@@ -13,7 +13,7 @@ from app.services.validate_file import validate_file
 from app.services.preprocessing import preprocess_data
 
 from app.services.ai.analyzer import analyze_tickets
-from app.services.ai.test_gpt_response import (
+from app.services.ai.test.test_gpt_response import (
     GPT_RESULT
 )
 
@@ -74,8 +74,7 @@ async def upload_file(file: UploadFile = File(...)):
         if not preprocess_result["success"]:
             return JSONResponse(status_code=400, content=preprocess_result)
 
-        # gpt_result = analyze_tickets(preprocess_result["data"])
-        gpt_result = GPT_RESULT
+        gpt_result = analyze_tickets(preprocess_result["data"])
 
         if not gpt_result["success"]:
             return JSONResponse(status_code=400, content=gpt_result)
@@ -85,14 +84,14 @@ async def upload_file(file: UploadFile = File(...)):
         if not embedding_result["success"]:
             return JSONResponse(status_code=400, content=embedding_result)
 
-        clusters = create_ticket_clusters(embedding_result["data"])
+        clustering_result = create_ticket_clusters(embedding_result["data"])
 
-        if not clusters["success"]:
-            return JSONResponse(status_code=400, content=clusters)
+        if not clustering_result["success"]:
+            return JSONResponse(status_code=400, content=clustering_result)
 
         report_result = generate_excel_report(
             preprocess_result["data"],
-            clusters["data"]["tickets"],
+            clustering_result["data"]["tickets"],
             unique_filename
         )
 

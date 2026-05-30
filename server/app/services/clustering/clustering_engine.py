@@ -5,12 +5,41 @@ from app.services.clustering.clustering_service import (
 SIMILARITY_THRESHOLD = 0.75
 
 
+def update_centroid(
+    current_centroid,
+    new_embedding,
+    total_tickets
+):
+
+    updated_centroid = []
+
+    for i in range(len(current_centroid)):
+
+        updated_value = (
+            (
+                current_centroid[i]
+                * (total_tickets - 1)
+            )
+            + new_embedding[i]
+        ) / total_tickets
+
+        updated_centroid.append(
+            updated_value
+        )
+
+    return updated_centroid
+
+
 def assign_cluster(ticket, clusters):
 
     try:
 
         ticket_number = ticket.get("number")
         ticket_embedding = ticket.get("embedding")
+        ticket_number = ticket.get("number")
+        ticket_embedding = ticket.get("embedding")
+        ticket_service = ticket.get("service", "")
+        ticket_sub_service = ticket.get("sub_service", "")
 
         if not ticket_number:
 
@@ -28,7 +57,7 @@ def assign_cluster(ticket, clusters):
                 "data": None
             }
 
-        # First cluster
+        # First cluster creation
         if len(clusters) == 0:
 
             cluster = {
@@ -62,6 +91,42 @@ def assign_cluster(ticket, clusters):
             if not similarity_result["success"]:
                 continue
 
+            similarity = similarity_result[
+                "data"
+            ]
+
+            cluster_service = cluster.get(
+                "service",
+                ""
+            )
+
+            cluster_sub_service = cluster.get(
+                "sub_service",
+                ""
+            )
+
+            # Service match boost
+            if (
+                ticket_service
+                and cluster_service
+                and (
+                    ticket_service
+                    == cluster_service
+                )
+            ):
+                similarity += 0.02
+
+            # Sub-service match boost
+            if (
+                ticket_sub_service
+                and cluster_sub_service
+                and (
+                    ticket_sub_service
+                    == cluster_sub_service
+                )
+            ):
+                similarity += 0.02
+
             similarity = similarity_result["data"]
 
             if similarity > best_similarity:
@@ -69,7 +134,7 @@ def assign_cluster(ticket, clusters):
                 best_similarity = similarity
                 best_cluster = cluster
 
-        # Existing cluster assignment
+        # Assign to existing cluster
         if (
             best_cluster is not None
             and best_similarity >= SIMILARITY_THRESHOLD
@@ -79,11 +144,28 @@ def assign_cluster(ticket, clusters):
                 ticket_number
             )
 
+            # Update centroid dynamically
+            total_tickets = len(
+                best_cluster["ticket_ids"]
+            )
+
+            updated_centroid = update_centroid(
+                best_cluster["centroid_embedding"],
+                ticket_embedding,
+                total_tickets
+            )
+
+            best_cluster["centroid_embedding"] = (
+                updated_centroid
+            )
+
             return {
                 "success": True,
                 "message": "Assigned to existing cluster successfully",
                 "data": {
-                    "cluster_id": best_cluster["cluster_id"],
+                    "cluster_id": (
+                        best_cluster["cluster_id"]
+                    ),
                     "similarity": best_similarity
                 }
             }
@@ -114,6 +196,8 @@ def assign_cluster(ticket, clusters):
 
         return {
             "success": False,
-            "message": f"Error assigning cluster: {str(e)}",
+            "message": (
+                f"Error assigning cluster: {str(e)}"
+            ),
             "data": None
         }

@@ -46,10 +46,30 @@ def analyze_ticket(ticket):
             "success": True,
             "message": "Ticket analyzed successfully",
             "data": {
-                "number": ticket.get("Number", ""),
-                "issue": parsed_response.get("issue", ""),
-                "root_cause": parsed_response.get("root_cause", ""),
-                "resolution": parsed_response.get("resolution", "")
+                "number": ticket.get(
+                    "Number",
+                    ""
+                ),
+                "service": ticket.get(
+                    "Service",
+                    ""
+                ),
+                "sub_service": ticket.get(
+                    "Sub-service",
+                    ""
+                ),
+                "issue": parsed_response.get(
+                    "issue",
+                    ""
+                ),
+                "root_cause": parsed_response.get(
+                    "root_cause",
+                    ""
+                ),
+                "resolution": parsed_response.get(
+                    "resolution",
+                    ""
+                )
             }
         }
 
@@ -72,10 +92,11 @@ def analyze_tickets(tickets):
 
             result = analyze_ticket(ticket)
 
-            analyzed_tickets.append({
-                "ticket_number": ticket.get("Number", ""),
-                "analysis": result
-            })
+            if not result["success"]:
+                return result
+            analyzed_tickets.append(
+                result["data"]
+            )
 
         return {
             "success": True,
@@ -84,9 +105,10 @@ def analyze_tickets(tickets):
         }
 
     except Exception as e:
-
         return {
             "success": False,
-            "message": f"Error analyzing tickets: {str(e)}",
+            "message": (
+                f"Error analyzing tickets: {str(e)}"
+            ),
             "data": None
         }
