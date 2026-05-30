@@ -1,11 +1,13 @@
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import JSONResponse
 import os
-from app.utils.file_utils import (
-    validate_file_extension,
-    generate_unique_filename
-)
 from app.services.excel_parser import parse_excel_file
+from app.services.preprocessing import preprocess_data
+from app.services.validate_file import validate_file
+from app.utils.file_utils import (
+    generate_unique_filename,
+    validate_file_extension,
+)
 
 router = APIRouter()
 
@@ -13,50 +15,52 @@ UPLOAD_DIR = "uploads"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
 
     try:
 
-        if not validate_file_extension(file.filename):
+        validation_result = validate_file_extension(file.filename)
 
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "success": False,
-                    "message": "Invalid file extension",
-                    "data": None
-                }
-            )
+        if not validation_result["success"]:
+            return JSONResponse(status_code=400, content=validation_result)
 
-        unique_filename = generate_unique_filename(file.filename)
+        filename_result = generate_unique_filename(file.filename)
+
+        if not filename_result["success"]:
+            return JSONResponse(status_code=400, content=filename_result)
+
+        unique_filename = filename_result["data"]
 
         file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
-        with open(file_path, "wb") as fileBuffer:
-
+        with open(file_path, "wb") as file_buffer:
             file_content = await file.read()
-            fileBuffer.write(file_content)
+            file_buffer.write(file_content)
 
-        parsed_data = parse_excel_file(file_path)
+        parsed_result = parse_excel_file(file_path)
 
-        if not parsed_data["success"]:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "success": False,
-                    "message": parsed_data["message"],
-                    "data": None
-                }
-            )
+        if not parsed_result["success"]:
+            return JSONResponse(status_code=400, content=parsed_result)
+
+        file_validation_result = validate_file(parsed_result["data"]["columns"])
+
+        if not file_validation_result["success"]:
+            return JSONResponse(status_code=400, content=file_validation_result)
+
+        preprocess_result = preprocess_data(parsed_result["data"]["rows"])
+
+        if not preprocess_result["success"]:
+            return JSONResponse(status_code=400, content=preprocess_result)
 
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
-                "message": "File parsed successfully",
-                "data": parsed_data.get("data", [])
-            }
+                "message": "File uploaded and processed successfully",
+                "data": preprocess_result["data"],
+            },
         )
 
     except Exception as e:
@@ -66,6 +70,6 @@ async def upload_file(file: UploadFile = File(...)):
             content={
                 "success": False,
                 "message": f"Internal server error: {str(e)}",
-                "data": None
-            }
+                "data": None,
+            },
         )

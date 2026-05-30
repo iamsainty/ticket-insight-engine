@@ -5,7 +5,7 @@ REQUIRED_COLUMNS = [
     "Short description",
     "Description",
     "Close notes",
-    "Additional comments (User View)"
+    "Additional comments (User View)",
 ]
 
 
@@ -25,19 +25,15 @@ def validate_file(columns):
             return {
                 "success": False,
                 "message": "Missing required columns",
-                "data": missing_columns
+                "data": missing_columns,
             }
 
-        return {
-            "success": True,
-            "message": "File validated successfully",
-            "data": None
-        }
+        return {"success": True, "message": "File validated successfully", "data": None}
 
     except Exception as e:
 
         return {
             "success": False,
             "message": f"Error validating file: {str(e)}",
-            "data": None
+            "data": None,
         }

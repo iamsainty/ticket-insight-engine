@@ -5,8 +5,9 @@ COLUMNS_TO_PREPROCESS = [
     "Short description",
     "Description",
     "Close notes",
-    "Additional comments (User View)"
+    "Additional comments (User View)",
 ]
+
 
 def preprocess_row(text):
 
@@ -19,76 +20,47 @@ def preprocess_row(text):
 
         # Mask email addresses
         text = re.sub(
-            r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
-            '[EMAIL]',
-            text
+            r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[EMAIL]", text
         )
 
         # Mask phone numbers
-        text = re.sub(
-            r'\b\d{10}\b',
-            '[PHONE]',
-            text
-        )
+        text = re.sub(r"\b\d{10}\b", "[PHONE]", text)
 
         # Mask ticket ids
         text = re.sub(
-            r'\b(INC|TASK|RITM|SER)\d+\b',
-            '[TICKET_ID]',
-            text,
-            flags=re.IGNORECASE
+            r"\b(INC|TASK|RITM|SER)\d+\b", "[TICKET_ID]", text, flags=re.IGNORECASE
         )
 
         # Mask Microsoft Teams meeting links
-        text = re.sub(
-            r'https:\/\/teams\.microsoft\.com\/[^\s]+',
-            '[TEAMS_LINK]',
-            text
-        )
+        text = re.sub(r"https:\/\/teams\.microsoft\.com\/[^\s]+", "[TEAMS_LINK]", text)
 
         # Remove greetings like Hi Team, Hello Team etc
         text = re.sub(
-            r'\b(hi team|hello team|hi|hello|thanks|regards)\b[:,]?',
-            '',
+            r"\b(hi team|hello team|hi|hello|thanks|regards)\b[:,]?",
+            "",
             text,
-            flags=re.IGNORECASE
+            flags=re.IGNORECASE,
         )
 
         # Remove multiple new lines
-        text = re.sub(
-            r'\n+',
-            ' ',
-            text
-        )
+        text = re.sub(r"\n+", " ", text)
 
         # Remove multiple spaces
-        text = re.sub(
-            r'\s+',
-            ' ',
-            text
-        )
+        text = re.sub(r"\s+", " ", text)
 
         # Replace date and timestamp
-        text = re.sub(
-            r'\b\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}:\d{2}\b',
-            '[DATE]',
-            text
-        )
+        text = re.sub(r"\b\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}:\d{2}\b", "[DATE]", text)
 
         # Replace additional comment marker
         text = re.sub(
-            r'\(Additional comments \(User View\)\)',
-            '[COMMENT]',
+            r"\(Additional comments \(User View\)\)",
+            "[COMMENT]",
             text,
-            flags=re.IGNORECASE
+            flags=re.IGNORECASE,
         )
 
         # Replace IP addresses
-        text = re.sub(
-            r'\b(?:\d{1,3}\.){3}\d{1,3}\b',
-            '[IP_ADDRESS]',
-            text
-        )
+        text = re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "[IP_ADDRESS]", text)
 
         text = text.strip()
 
@@ -118,12 +90,13 @@ def preprocess_data(rows):
         return {
             "success": True,
             "message": "Data preprocessed successfully",
-            "processed_rows": processed_rows
+            "data": processed_rows,
         }
 
     except Exception as e:
 
         return {
             "success": False,
-            "message": f"Error preprocessing data: {str(e)}"
+            "message": f"Error preprocessing data: {str(e)}",
+            "data": None,
         }
