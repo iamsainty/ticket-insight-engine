@@ -1,5 +1,5 @@
 from app.services.ai.client import client, deployment_name
-from app.services.ai.prompts import SYSTEM_PROMPT
+from app.services.ai.prompt import SYSTEM_PROMPT
 
 import json
 
@@ -9,18 +9,18 @@ def analyze_ticket(ticket):
     try:
 
         user_prompt = f"""
-Short Description:
-{ticket.get("short_description", "")}
+        Short Description:
+        {ticket.get("Short description", "")}
 
-Description:
-{ticket.get("description", "")}
+        Description:
+        {ticket.get("Description", "")}
 
-Additional Comments:
-{ticket.get("additional_comments", "")}
+        Additional Comments:
+        {ticket.get("Additional comments (User View)", "")}
 
-Closing Notes:
-{ticket.get("closing_notes", "")}
-"""
+        Closing Notes:
+        {ticket.get("Close notes", "")}
+        """
 
         response = client.chat.completions.create(
             model=deployment_name,
@@ -44,34 +44,48 @@ Closing Notes:
 
         return {
             "success": True,
+            "message": "Ticket analyzed successfully",
             "data": {
                 "issue": parsed_response.get("issue", ""),
                 "root_cause": parsed_response.get("root_cause", ""),
                 "resolution": parsed_response.get("resolution", "")
-            },
-            "error": None
+            }
         }
 
     except Exception as e:
 
         return {
             "success": False,
-            "data": None,
-            "error": str(e)
+            "message": f"Error analyzing ticket: {str(e)}",
+            "data": None
         }
 
 
 def analyze_tickets(tickets):
 
-    analyzed_tickets = []
+    try:
 
-    for ticket in tickets:
+        analyzed_tickets = []
 
-        result = analyze_single_ticket(ticket)
+        for ticket in tickets:
 
-        analyzed_tickets.append({
-            "ticket_number": ticket.get("Number", ""),
-            "analysis": result
-        })
+            result = analyze_ticket(ticket)
 
-    return analyzed_tickets
+            analyzed_tickets.append({
+                "ticket_number": ticket.get("Number", ""),
+                "analysis": result
+            })
+
+        return {
+            "success": True,
+            "message": "Tickets analyzed successfully",
+            "data": analyzed_tickets
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "message": f"Error analyzing tickets: {str(e)}",
+            "data": None
+        }

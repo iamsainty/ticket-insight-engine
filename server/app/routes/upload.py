@@ -8,6 +8,7 @@ from app.utils.file_utils import (
     generate_unique_filename,
     validate_file_extension,
 )
+from app.services.ai.analyzer import analyze_tickets
 
 router = APIRouter()
 
@@ -54,12 +55,17 @@ async def upload_file(file: UploadFile = File(...)):
         if not preprocess_result["success"]:
             return JSONResponse(status_code=400, content=preprocess_result)
 
+        gpt_result = analyze_tickets(preprocess_result["data"])
+
+        if not gpt_result["success"]:
+            return JSONResponse(status_code=400, content=gpt_result)
+
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
                 "message": "File uploaded and processed successfully",
-                "data": preprocess_result["data"],
+                "data": gpt_result["data"],
             },
         )
 
