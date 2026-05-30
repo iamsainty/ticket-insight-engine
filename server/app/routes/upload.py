@@ -1,16 +1,32 @@
+import os
+
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import JSONResponse
-import os
-from app.services.excel_parser import parse_excel_file
-from app.services.preprocessing import preprocess_data
-from app.services.validate_file import validate_file
+
 from app.utils.file_utils import (
     generate_unique_filename,
     validate_file_extension,
 )
+
+from app.services.excel_parser import parse_excel_file
+from app.services.validate_file import validate_file
+from app.services.preprocessing import preprocess_data
+
 from app.services.ai.analyzer import analyze_tickets
+from app.services.ai.test_gpt_response import (
+    GPT_RESULT
+)
+
 from app.services.embeddings.embedding_service import (
     generate_ticket_embeddings
+)
+
+from app.services.clustering.ticket_clustering_service import (
+    create_ticket_clusters
+)
+
+from app.services.report_generation_service import (
+    generate_excel_report
 )
 
 router = APIRouter()
@@ -58,7 +74,8 @@ async def upload_file(file: UploadFile = File(...)):
         if not preprocess_result["success"]:
             return JSONResponse(status_code=400, content=preprocess_result)
 
-        gpt_result = analyze_tickets(preprocess_result["data"])
+        # gpt_result = analyze_tickets(preprocess_result["data"])
+        gpt_result = GPT_RESULT
 
         if not gpt_result["success"]:
             return JSONResponse(status_code=400, content=gpt_result)
@@ -73,13 +90,25 @@ async def upload_file(file: UploadFile = File(...)):
         if not clusters["success"]:
             return JSONResponse(status_code=400, content=clusters)
 
+        report_result = generate_excel_report(
+            preprocess_result["data"],
+            clusters["data"]["tickets"],
+            unique_filename
+        )
+
+        if not report_result["success"]:
+            return JSONResponse(
+                status_code=400,
+                content=report_result
+            )
+
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
-                "message": "File uploaded and processed successfully",
-                "data": clusters["data"],
-            },
+                "message": "File processed successfully",
+                "data": report_result["data"]
+            }
         )
 
     except Exception as e:

@@ -11,7 +11,13 @@ def generate_ticket_embeddings(gpt_result):
 
         for ticket in gpt_result:
 
-            ticket_data = ticket.get("data", {})
+            ticket_data = ticket.get(
+                "analysis",
+                {}
+            ).get(
+                "data",
+                {}
+            )
 
             number = ticket_data.get("number", "")
             issue = ticket_data.get("issue", "")
