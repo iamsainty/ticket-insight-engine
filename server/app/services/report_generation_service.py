@@ -1,9 +1,7 @@
 import pandas as pd
 import os
 
-REPORT_DIR = "generated_reports"
-
-os.makedirs(REPORT_DIR, exist_ok=True)
+REPORT_DIR = "report"
 
 def generate_excel_report(
     original_rows,

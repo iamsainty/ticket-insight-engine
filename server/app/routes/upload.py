@@ -1,7 +1,15 @@
 import os
 
-from fastapi import APIRouter, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    BackgroundTasks
+)
+from fastapi.responses import (
+    JSONResponse,
+    FileResponse
+)
 
 from app.utils.file_utils import (
     generate_unique_filename,
@@ -32,14 +40,21 @@ from app.services.report_generation_service import (
 router = APIRouter()
 
 UPLOAD_DIR = "uploads"
+REPORT_DIR = "report"
 
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
+def delete_file(path):
+    if os.path.exists(path):
+        os.remove(path)
 
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...)
+):
 
     try:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        os.makedirs(REPORT_DIR, exist_ok=True)
 
         validation_result = validate_file_extension(file.filename)
 
@@ -75,6 +90,7 @@ async def upload_file(file: UploadFile = File(...)):
             return JSONResponse(status_code=400, content=preprocess_result)
 
         gpt_result = analyze_tickets(preprocess_result["data"])
+        # gpt_result = GPT_RESULT
 
         if not gpt_result["success"]:
             return JSONResponse(status_code=400, content=gpt_result)
@@ -101,13 +117,29 @@ async def upload_file(file: UploadFile = File(...)):
                 content=report_result
             )
 
-        return JSONResponse(
-            status_code=200,
-            content={
-                "success": True,
-                "message": "File processed successfully",
-                "data": report_result["data"]
-            }
+        report_path = report_result["data"][
+            "report_path"
+        ]
+
+        background_tasks.add_task(
+            delete_file,
+            file_path
+        )
+
+        background_tasks.add_task(
+            delete_file,
+            report_path
+        )
+
+        return FileResponse(
+            path=report_path,
+            filename=report_result["data"][
+                "report_filename"
+            ],
+            media_type=(
+                "application/vnd.openxmlformats-"
+                "officedocument.spreadsheetml.sheet"
+            )
         )
 
     except Exception as e:
