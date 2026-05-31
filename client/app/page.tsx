@@ -15,6 +15,7 @@ export default function HomePage() {
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const [reportData, setReportData] = useState<any>(null);
+  const [reportBlob, setReportBlob] = useState<Blob | null>(null);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -44,24 +45,9 @@ export default function HomePage() {
 
       const response = await uploadDataset(file);
 
-      // create downloadable file url
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const blob = new Blob([response.data]);
 
-      // create temporary anchor
-      const link = document.createElement("a");
-
-      link.href = url;
-
-      // generated report filename
-      link.setAttribute("download", `report-${Date.now()}.xlsx`);
-
-      document.body.appendChild(link);
-
-      // auto download
-      link.click();
-
-      // cleanup
-      link.remove();
+      setReportBlob(blob);
 
       setView("report");
     } catch (error) {
@@ -81,9 +67,12 @@ export default function HomePage() {
     return (
       <ReportView
         file={file}
+        reportBlob={reportBlob}
         reportData={reportData}
         onReset={() => {
           setFile(null);
+          setReportBlob(null);
+          setReportData(null);
           setView("upload");
         }}
       />
