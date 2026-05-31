@@ -1,8 +1,25 @@
+import numpy as np
+
 from app.services.clustering.clustering_service import (
     calculate_similarity
 )
 
-SIMILARITY_THRESHOLD = 0.75
+# Recommended for OpenAI embeddings
+SIMILARITY_THRESHOLD = 0.88
+
+
+def normalize_embedding(embedding):
+
+    embedding_array = np.array(embedding)
+
+    norm = np.linalg.norm(embedding_array)
+
+    if norm == 0:
+        return embedding
+
+    normalized = embedding_array / norm
+
+    return normalized.tolist()
 
 
 def update_centroid(
@@ -27,6 +44,11 @@ def update_centroid(
             updated_value
         )
 
+    # Normalize centroid
+    updated_centroid = normalize_embedding(
+        updated_centroid
+    )
+
     return updated_centroid
 
 
@@ -35,17 +57,28 @@ def assign_cluster(ticket, clusters):
     try:
 
         ticket_number = ticket.get("number")
-        ticket_embedding = ticket.get("embedding")
-        ticket_number = ticket.get("number")
-        ticket_embedding = ticket.get("embedding")
-        ticket_service = ticket.get("service", "")
-        ticket_sub_service = ticket.get("sub_service", "")
+
+        ticket_embedding = ticket.get(
+            "embedding"
+        )
+
+        ticket_service = ticket.get(
+            "service",
+            ""
+        )
+
+        ticket_sub_service = ticket.get(
+            "sub_service",
+            ""
+        )
 
         if not ticket_number:
 
             return {
                 "success": False,
-                "message": "Ticket number is required",
+                "message": (
+                    "Ticket number is required"
+                ),
                 "data": None
             }
 
@@ -53,24 +86,42 @@ def assign_cluster(ticket, clusters):
 
             return {
                 "success": False,
-                "message": "Ticket embedding is required",
+                "message": (
+                    "Ticket embedding is required"
+                ),
                 "data": None
             }
+
+        # Normalize incoming embedding
+        ticket_embedding = normalize_embedding(
+            ticket_embedding
+        )
 
         # First cluster creation
         if len(clusters) == 0:
 
             cluster = {
                 "cluster_id": "Cluster1",
-                "centroid_embedding": ticket_embedding,
-                "ticket_ids": [ticket_number]
+                "centroid_embedding": (
+                    ticket_embedding
+                ),
+                "ticket_ids": [
+                    ticket_number
+                ],
+                "service": ticket_service,
+                "sub_service": (
+                    ticket_sub_service
+                ),
+                "total_tickets": 1
             }
 
             clusters.append(cluster)
 
             return {
                 "success": True,
-                "message": "First cluster created successfully",
+                "message": (
+                    "First cluster created successfully"
+                ),
                 "data": {
                     "cluster_id": "Cluster1",
                     "similarity": 1.0
@@ -78,14 +129,19 @@ def assign_cluster(ticket, clusters):
             }
 
         best_similarity = -1
+
         best_cluster = None
 
-        # Compare with existing clusters
+        # Compare against existing clusters
         for cluster in clusters:
 
-            similarity_result = calculate_similarity(
-                ticket_embedding,
-                cluster["centroid_embedding"]
+            similarity_result = (
+                calculate_similarity(
+                    ticket_embedding,
+                    cluster[
+                        "centroid_embedding"
+                    ]
+                )
             )
 
             if not similarity_result["success"]:
@@ -105,7 +161,7 @@ def assign_cluster(ticket, clusters):
                 ""
             )
 
-            # Service match boost
+            # Service boost
             if (
                 ticket_service
                 and cluster_service
@@ -116,7 +172,7 @@ def assign_cluster(ticket, clusters):
             ):
                 similarity += 0.02
 
-            # Sub-service match boost
+            # Sub-service boost
             if (
                 ticket_sub_service
                 and cluster_sub_service
@@ -127,46 +183,67 @@ def assign_cluster(ticket, clusters):
             ):
                 similarity += 0.02
 
-            similarity = similarity_result["data"]
+            # Prevent similarity > 1
+            similarity = min(
+                similarity,
+                1.0
+            )
 
             if similarity > best_similarity:
 
                 best_similarity = similarity
+
                 best_cluster = cluster
 
         # Assign to existing cluster
         if (
             best_cluster is not None
-            and best_similarity >= SIMILARITY_THRESHOLD
+            and (
+                best_similarity
+                >= SIMILARITY_THRESHOLD
+            )
         ):
 
-            best_cluster["ticket_ids"].append(
-                ticket_number
+            best_cluster[
+                "ticket_ids"
+            ].append(ticket_number)
+
+            best_cluster[
+                "total_tickets"
+            ] += 1
+
+            total_tickets = best_cluster[
+                "total_tickets"
+            ]
+
+            updated_centroid = (
+                update_centroid(
+                    best_cluster[
+                        "centroid_embedding"
+                    ],
+                    ticket_embedding,
+                    total_tickets
+                )
             )
 
-            # Update centroid dynamically
-            total_tickets = len(
-                best_cluster["ticket_ids"]
-            )
-
-            updated_centroid = update_centroid(
-                best_cluster["centroid_embedding"],
-                ticket_embedding,
-                total_tickets
-            )
-
-            best_cluster["centroid_embedding"] = (
-                updated_centroid
-            )
+            best_cluster[
+                "centroid_embedding"
+            ] = updated_centroid
 
             return {
                 "success": True,
-                "message": "Assigned to existing cluster successfully",
+                "message": (
+                    "Assigned to existing cluster successfully"
+                ),
                 "data": {
                     "cluster_id": (
-                        best_cluster["cluster_id"]
+                        best_cluster[
+                            "cluster_id"
+                        ]
                     ),
-                    "similarity": best_similarity
+                    "similarity": (
+                        best_similarity
+                    )
                 }
             }
 
@@ -177,18 +254,33 @@ def assign_cluster(ticket, clusters):
 
         new_cluster = {
             "cluster_id": new_cluster_id,
-            "centroid_embedding": ticket_embedding,
-            "ticket_ids": [ticket_number]
+            "centroid_embedding": (
+                ticket_embedding
+            ),
+            "ticket_ids": [
+                ticket_number
+            ],
+            "service": ticket_service,
+            "sub_service": (
+                ticket_sub_service
+            ),
+            "total_tickets": 1
         }
 
         clusters.append(new_cluster)
 
         return {
             "success": True,
-            "message": "New cluster created successfully",
+            "message": (
+                "New cluster created successfully"
+            ),
             "data": {
-                "cluster_id": new_cluster_id,
-                "similarity": best_similarity
+                "cluster_id": (
+                    new_cluster_id
+                ),
+                "similarity": (
+                    best_similarity
+                )
             }
         }
 
