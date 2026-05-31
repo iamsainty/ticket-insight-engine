@@ -1,24 +1,32 @@
 import axios from "axios";
 
 export async function uploadDataset(file: File) {
-  const formData = new FormData();
+  try {
+    const formData = new FormData();
 
-  formData.append("file", file);
+    formData.append("file", file);
 
-  const serverBaseUrl =
-    process.env.NEXT_PUBLIC_SERVER_BASE_URL;
+    const serverBaseUrl =
+      process.env.NEXT_PUBLIC_SERVER_BASE_URL;
 
-  const response = await axios.post(
-    `${serverBaseUrl}/upload`,
-    formData,
-    {
-      responseType: "blob",
+    const response = await axios.post(
+      `${serverBaseUrl}/upload`,
+      formData,
+      {
+        responseType: "blob",
 
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+        // prevents axios from throwing on 4xx/5xx
+        validateStatus: () => true,
 
-  return response;
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response;
+  } catch (error) {
+    console.error("Upload API Error:", error);
+    throw error;
+  }
 }

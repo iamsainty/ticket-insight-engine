@@ -45,6 +45,22 @@ export default function HomePage() {
 
       const response = await uploadDataset(file);
 
+      const contentType = String(response.headers["content-type"] || "");
+
+      // If backend returned JSON error
+      if (contentType.includes("application/json")) {
+        const errorText = await response.data.text();
+
+        const errorData = JSON.parse(errorText);
+
+        setErrorMessage(errorData?.message || "Failed to process dataset.");
+
+        setView("error");
+
+        return;
+      }
+
+      // Successful excel blob
       const blob = new Blob([response.data]);
 
       setReportBlob(blob);
@@ -53,7 +69,7 @@ export default function HomePage() {
     } catch (error) {
       console.error(error);
 
-      setErrorMessage("Failed to process dataset. Please try again.");
+      setErrorMessage("Something went wrong while processing the dataset.");
 
       setView("error");
     }

@@ -1,5 +1,4 @@
 import {
-  FiCheckCircle,
   FiUpload,
   FiDownload,
   FiFileText,
@@ -43,73 +42,64 @@ export default function ReportView({
   return (
     <main className="relative overflow-hidden bg-slate-50 px-6 py-16">
       {/* Background Glow */}
-      <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-100/40 blur-3xl" />
+      <div className="absolute left-1/2 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-100/40 blur-3xl" />
 
-      <div className="relative mx-auto max-w-5xl">
-        <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/90 shadow-xl backdrop-blur">
-          {/* Top Banner */}
-          <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50 via-white to-blue-50 px-10 py-8">
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-medium text-emerald-700">
-              <FiCheckCircle size={16} />
-              Analysis Complete
-            </div>
-
-            <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900">
-              Ticket Insight Report is Ready
+      <div className="relative mx-auto flex min-h-[70vh] max-w-3xl items-center justify-center">
+        <div className="w-full rounded-[28px] border border-slate-200/70 bg-white/90 p-10 shadow-lg backdrop-blur">
+          {/* Header */}
+          <div className="text-center">
+            <h1 className="mt-6 text-3xl font-semibold tracking-tight text-slate-900">
+              Report Ready
             </h1>
 
-            <p className="mt-4 max-w-3xl leading-relaxed text-slate-600">
-              Your ticket dataset has been processed successfully. The generated
-              report is ready to download.
+            <p className="mx-auto mt-3 max-w-xl text-[15px] leading-7 text-slate-500">
+              Your support ticket dataset has been processed successfully and
+              the AI-generated analysis report is ready to download.
             </p>
           </div>
 
-          <div className="p-10">
-            {/* Report Card */}
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-xl bg-blue-100 p-4 text-blue-600">
-                    <FiFileText size={24} />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium text-slate-500">
-                      Generated Report
-                    </p>
-
-                    <h2 className="text-xl font-semibold text-slate-900">
-                      ticket-analysis-report.xlsx
-                    </h2>
-
-                    {file && (
-                      <p className="text-sm text-slate-500">
-                        Generated from {file.name}
-                      </p>
-                    )}
-                  </div>
+          {/* Report Card */}
+          <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="rounded-2xl bg-blue-100 p-4 text-blue-600">
+                  <FiFileText size={22} />
                 </div>
 
-                <button
-                  onClick={handleDownload}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-4 text-sm font-medium text-white shadow-sm transition duration-200 hover:bg-blue-700 hover:shadow-md active:scale-[0.98] cursor-pointer"
-                >
-                  <FiDownload size={18} />
-                  Download Report
-                </button>
-              </div>
-            </div>
+                <div>
+                  <p className="text-sm text-slate-400">Generated Report</p>
 
-            {/* Bottom Actions */}
-            <div className="mt-10 flex flex-wrap items-center gap-4">
+                  <h2 className="mt-1 text-[15px] font-medium text-slate-800">
+                    ticket-analysis-report.xlsx
+                  </h2>
+
+                  {file && (
+                    <p className="mt-1 text-sm text-slate-500">
+                      Generated from {file.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <button
-                onClick={onReset}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition duration-200 hover:bg-slate-50 hover:shadow-sm"
+                onClick={handleDownload}
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
               >
-                <FiUpload size={16} />
-                Upload Another File
+                <FiDownload size={16} />
+                Download Report
               </button>
             </div>
+          </div>
+
+          {/* Action */}
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={onReset}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-black px-5 py-3 text-sm font-medium text-black transition-all duration-200 hover:bg-slate-900 hover:text-white active:scale-[0.98]"
+            >
+              <FiUpload size={16} />
+              Upload Another File
+            </button>
           </div>
         </div>
       </div>
