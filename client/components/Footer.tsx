@@ -6,7 +6,7 @@ export default function Footer() {
         <p className="text-slate-500">© 2026 Ticket Insight Engine</p>
 
         {/* Right */}
-        <div className="flex items-center gap-1.5 text-black">
+        <div className="flex items-center gap-1.5 text-slate-500">
           <address className="not-italic font-medium">
             Designed and Developed with &hearts; by{" "}
             <a

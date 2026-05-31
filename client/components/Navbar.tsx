@@ -29,14 +29,14 @@ export default function Navbar() {
         <nav className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-1">
           <Link
             href="/"
-            className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all duration-200"
+            className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600"
           >
             Home
           </Link>
 
           <Link
             href="/about"
-            className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-white hover:text-slate-900"
+            className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600"
           >
             About
           </Link>
