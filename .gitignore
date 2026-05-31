@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Uploads
+uploads/
+
+# generated report
+generated_reports/
+
+test/
